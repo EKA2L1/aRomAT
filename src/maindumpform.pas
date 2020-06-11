@@ -9,7 +9,7 @@ uses
   LCLIntf, LCLType, SysUtils, Variants, Classes,
   Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, Grids, ComCtrls, Generics.Collections,
-  DBGrids, ExtCtrls, Menus, Windows, StrUtils, CryptUtils;
+  DBGrids, ExtCtrls, Menus, Windows, StrUtils, CryptUtils, FileUtils;
 
 type
 
@@ -34,9 +34,7 @@ type
     HideLogBtn: TBitBtn;
     SearchBoxLabel: TLabel;
     SaveSeperateCBox: TCheckBox;
-    ShowLogInfo1Label: TLabel;
-    ShowLogInfo2Label: TLabel;
-    ShowLogInfo3Label: TLabel;
+    ShowLogInfoLabel: TLabel;
     ShowLinkBtn: TBitBtn;
     SaveLogBtn: TBitBtn;
     PopupMenu: TPopupMenu;
@@ -335,6 +333,42 @@ begin
   SaveLogBtn.Visible := False;
 end;
 
+function ReadAnImportOutLoud(Stream: TStream; var buf: dword): byte;
+var
+  lastRomPosition: qword;
+  isOldExport: boolean;
+begin
+  Stream.Read(buf, 4);
+
+  { LDR PC, [PC, #-4] , basically jump stub }
+  { In some case it's thumb with LDR R3, [PC, #0], address aligned by 4 }
+  if (buf = $E51FF004) or (buf and ($FFFF) = $4B01) then
+  begin
+    ReadAnImportOutLoud := 1;
+
+    if (buf and ($FFFF) = $4B01) then
+    begin
+      // Skip 4 bytes
+      FS.Seek(4, soCurrent);
+      isOldExport := True;
+      ReadAnImportOutLoud := 2;
+    end;
+
+    FS.Read(buf, 4);
+
+    if (isOldExport) then
+    begin
+      { The true address is stored in the address we just read from }
+      lastRomPosition := FS.Position;
+      FS.Seek(RomToOffset(buf), soBeginning);
+      FS.Read(buf, 4);
+      FS.Seek(lastRomPosition, soBeginning);
+    end;
+  end
+  else
+    ReadAnImportOutLoud := 0;
+end;
+
 procedure TMainForm.ShowLinkBtnClick(Sender: TObject);
 var
   Size, i, k, len: longint;
@@ -342,7 +376,9 @@ var
   Name, expnames: string;
   Relations: TStringList;
   implist: TStringList;
+  lastRomPosition: qword;
   exptable, explist: array of string;
+  isOldExport: boolean;
   dic: mDic;
 begin
 
@@ -408,12 +444,10 @@ begin
 
         while (FS.Position < len) and (FS.Position < FS.Size) do
         begin
-          FS.Read(buf, 4);
           // inc(len, 4);
-          if buf = $E51FF004 then
+          if ReadAnImportOutLoud(FS, buf) > 0 then
           begin
             // inc(len, 4);
-            FS.Read(buf, 4);
             for k := 0 to expnum - 1 do
               if (buf <> 0) and (exptable[k] = inttohex(buf, 8)) and
                 (Pos(StringGrid1.Rows[i][1], explist[k]) = 0) then
@@ -439,10 +473,10 @@ begin
   Size := 0;
   while (FS.Position < len) and (FS.Position < FS.Size) do
   begin
-    FS.Read(buf, 4);
-    if buf = $E51FF004 then
+    { LDR PC, [PC, #-4] , basically jump stub }
+    { In some case it's thumb with LDR R3, [PC, #0], address aligned by 4 }
+    if ReadAnImportOutLoud(FS, buf) > 0 then
     begin
-      FS.Read(buf, 4);
       if dicM.TryGetValue(buf, dic) then
         implist.Values[StringGrid1.Rows[dic[0]][1]] :=
           implist.Values[StringGrid1.Rows[dic[0]][1]] +
@@ -578,15 +612,14 @@ end;
 procedure TMainForm.ProcessExportsBtnClick(Sender: TObject);
 var
   i, j, k: longint;
-  expnum, expaddr, bufexp, dsosize, dsostart: dword;
-  fDso: TFileStream;
+  expnum, expaddr, bufexp, dsosize, dsostart, exportLineTokenPos, exportNum: dword;
+  exportFileStream: TFileStream;
   sDso: TStringList;
-  fname, dname, dsotemp: string;
+  fname, dname, exportTempName, exportTempLine: AnsiString;
   Temp: TBytes;
   b: byte;
   dic: mDic;
 begin
-
   ProcessExportsBtn.Enabled := False;
 
   Application.ProcessMessages;
@@ -599,31 +632,83 @@ begin
     begin
       fname := StringGrid1.Rows[i][1];
       dname := ExtractFilePath(Application.Exename) + 'dso\' +
-        Copy(fname, 0, Length(fname) - 4) + '.dso';
+        Copy(fname, 0, Length(fname) - 4);
       sDso := TStringList.Create;
-      if FileExists(dname) then
+      if FileExists(dname + '.dso') then
       begin
-        fDso := TFileStream.Create(dname, fmOpenRead or fmShareDenyNone);
-        fDso.Seek($134, 0);
-        fDso.Read(dsostart, 4);
-        fDso.Read(dsosize, 4);
-        fDso.Seek(dsostart + 1, 0);
+        dname := dname + '.dso';
+
+        { Read DSO export lists }
+        exportFileStream := TFileStream.Create(dname, fmOpenRead or fmShareDenyNone);
+        exportFileStream.Seek($134, 0);
+        exportFileStream.Read(dsostart, 4);
+        exportFileStream.Read(dsosize, 4);
+        exportFileStream.Seek(dsostart + 1, 0);
         SetLength(Temp, dsosize);
-        fDso.Read(Temp[0], dsosize);
+        exportFileStream.Read(Temp[0], dsosize);
         while Temp[Length(Temp) - 1] = 0 do
           SetLength(Temp, Length(Temp) - 1);
         for b in Temp do
           if b > 0 then
-            dsotemp := dsotemp + chr(b)
+            exportTempName := exportTempName + chr(b)
           else
-            dsotemp := dsotemp + #13#10;
+            exportTempName := exportTempName + #13#10;
         SetLength(Temp, 0);
-        sDso.Text := dsotemp;
-        dsotemp := '';
+        sDso.Text := exportTempName;
+        exportTempName := '';
         sDso.Delete(sDso.Count - 1);
         sDso.Delete(sDso.Count - 1);
 
-        fDso.Free;
+        exportFileStream.Free;
+      end
+      else if FileExists(dname + '.idt') then
+      begin
+        dname := dname + '.idt';
+
+        { Try to read IDT exports }
+        exportFileStream := TFileStream.Create(dname, fmOpenRead or fmShareDenyNone);
+        while ReadLineAscii(exportFileStream, exportTempLine) do
+        begin
+          { Trim down spaces }
+          while (Length(exportTempLine) > 0) and (exportTempLine[1] = ' ') do
+            Delete(exportTempName, 1, 1);
+
+          { Ignore the first export or comments }
+          if (Length(exportTempLine) = 0) or (exportTempLine[1] = #13) or (exportTempLine[1] = ';') or
+             (exportTempLine[1] = '0') then
+             continue;
+
+          { Ignore if the first characters are not number, we are expecting ordinal numbers }
+          if not (exportTempLine[1] in ['0'..'9']) then
+             continue;
+          
+          { Parse the numbers at the beginning }
+          exportTempName := '';
+          exportLineTokenPos := 1;
+
+          while (exportTempLine[exportLineTokenPos] in ['0'..'9']) do
+          begin
+            exportTempName := exportTempName + exportTempLine[exportLineTokenPos];
+            inc(exportLineTokenPos);
+          end;
+
+          exportNum := StrToInt(exportTempName);
+
+          while (exportLineTokenPos <= Length(exportTempLine)) and (exportTempLine[exportLineTokenPos] = ' ') do
+            inc(exportLineTokenPos);
+
+          { We also want to skip the NAME= }
+          if ((Length(exportTempLine) - exportLineTokenPos + 1) <= 5) then
+            continue;
+
+          exportTempName := Copy(exportTempLine, exportLineTokenPos, Length(exportTempLine) - exportLineTokenPos + 1);
+
+          { Delete the newline }
+          if (exportTempName[Length(exportTempName)] = #13) then
+            Delete(exportTempName, Length(exportTempName), 1);
+
+          sDso.Insert(exportNum - 1, exportTempName);
+        end;
       end;
       FS.Seek(RomToOffset(expaddr), 0);
       for j := 1 to expnum do
@@ -676,6 +761,7 @@ var
   Size, i, len: longint;
   buf, entry: dword;
   Name: string;
+  importCodeType: byte;
   IDC: TStringList;
 begin
   IDC := TStringList.Create;
@@ -689,20 +775,27 @@ begin
   Size := StrToInt('$' + MainForm.StringGrid1.Rows[num][2]);
   len := FS.Position + Size;
   i := 0;
+  importCodeType := 0;
+
   while (FS.Position < len) and (FS.Position < FS.Size) do
   begin
-    FS.Read(buf, 4);
-    if buf = $E51FF004 then
+    importCodeType := ReadAnImportOutLoud(FS, buf);
+
+    if (importCodeType > 0)  then
     begin
-      FS.Read(buf, 4);
       if NamesArray.TryGetValue( { RomToOffset( } buf, Name) then
       begin
         if Copy(Name, 1, 1) = '"' then
           Name := StringReplace(Name, '"', '', [rfReplaceAll]);
-        IDC.Add(Format('MakeCode(0x%s);', [inttohex(FS.Position - 8 + romstart
+
+        { Assign offset to subtract to get import address }
+        if (importCodeType = 1) then importCodeType := 8
+        else importCodeType := 12;
+
+        IDC.Add(Format('MakeCode(0x%s);', [inttohex(FS.Position - importCodeType + romstart
           { RomToOffsetBase(entry) }, 8)]));
         IDC.Add(Format('MakeName(0x%s,"%s");',
-          [inttohex(FS.Position - 8 + romstart
+          [inttohex(FS.Position - importCodeType + romstart
           { RomToOffsetBase(entry) }, 8), Name]));
       end;
     end;
@@ -860,9 +953,7 @@ begin
   // SaveSeperateCBox.Visible := True;
 
   ShowLogCBox.Visible := True;
-  ShowLogInfo1Label.Visible := True;
-  ShowLogInfo2Label.Visible := True;
-  ShowLogInfo3Label.Visible := True;
+  ShowLogInfoLabel.Visible := True;
 end;
 
 function command_chk(addr: dword): boolean;

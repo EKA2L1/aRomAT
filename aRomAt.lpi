@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <PathDelim Value="\"/>
     <General>
+      <Flags>
+        <CompatibilityMode Value="True"/>
+      </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="aRomAt"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
@@ -24,7 +26,6 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0"/>
     </RunParams>
     <RequiredPackages Count="1">
       <Item1>
@@ -37,21 +38,18 @@
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="maindumpform.lfm"/>
+        <Filename Value="src\cryptutils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="maindumpform.pas"/>
+        <Filename Value="src\maindumpform.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="MainForm"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainDumpForm"/>
       </Unit2>
       <Unit3>
-        <Filename Value="cryptutils.pas"/>
+        <Filename Value="src\fileutils.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CryptUtils"/>
+        <UnitName Value="FileUtils"/>
       </Unit3>
     </Units>
   </ProjectOptions>
@@ -63,6 +61,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="src"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

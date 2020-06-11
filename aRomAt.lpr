@@ -5,7 +5,7 @@ program aRomAt;
 uses
   Forms,
   Interfaces,
-  MainDumpForm, CryptUtils;
+  MainDumpForm;
 
 {$R *.res}
 
