@@ -1,5 +1,5 @@
 backup
-dso
+dso*
 lib
 *.exe
 *.zip

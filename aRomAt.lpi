@@ -32,7 +32,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="aRomAt.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -44,6 +44,9 @@
       <Unit2>
         <Filename Value="src\maindumpform.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="MainForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainDumpForm"/>
       </Unit2>
       <Unit3>
@@ -51,6 +54,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="FileUtils"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="src\romexplorer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="RomExplorer"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

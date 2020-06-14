@@ -9,7 +9,8 @@ uses
   LCLIntf, LCLType, SysUtils, Variants, Classes,
   Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, Grids, ComCtrls, Generics.Collections,
-  DBGrids, ExtCtrls, Menus, Windows, StrUtils, CryptUtils, FileUtils;
+  DBGrids, ExtCtrls, Menus, Windows, StrUtils, CryptUtils, FileUtils,
+  RomExplorer;
 
 type
 
@@ -109,8 +110,7 @@ var
   dicRloc: TDictionary<longint, words>;
   dicDataRloc: TDictionary<longint, words>;
   dicImp: TDictionary<dword, dwords>;
-  romstart: dword;
-
+  romExplorer: TRomExplorer;
   sgsel: TStringList;
 
 implementation
@@ -179,89 +179,87 @@ begin
   Temp.Free;
 end;
 
-function RomToOffset(addr: dword): dword;
-begin
-  //Result := addr - (addr shr 28) * $10000000;
-  // Result := addr and $7fffffff;
-  Result := addr - romstart;
-end;
-
-function RomToOffsetBase(addr: dword): dword;
-begin
-  Result := (addr shr 28) * $10000000;
-  // Result := addr and $80000000;
-end;
-
 procedure LoadDump(path: string);
+type
+  TRomEntryStack = TStack<TRomEntry>;
 var
-  start, headlen, filesize, fileaddr, signature: dword;
-  i, buf: longint;
-  len: byte;
-  Buffer: TBytes;
-  Encoding: TEncoding;
+  signature, currentPos: dword;
+  i: longint;
+  encoding: TEncoding;
+  entryTemp: TRomEntry;
+  dirSearchList: TRomEntryStack;
 
 begin
   MainForm.OpenDialog.FileName := path;
   MainForm.StringGrid1.Visible := False;
 
   MainForm.StringGrid1EndDock(nil, nil, 0, 0);
-  // FS := TFileStream.Create(path, fmOpenRead or fmShareDenyNone);
+
   FS := TMemoryStream.Create;
   FS.LoadFromFile(path);
 
-  start := 0;
-  headlen := 0;
-  filesize := 0;
-  fileaddr := 0;
-  len := 0;
+  romExplorer := TRomExplorer.Create(TStream(FS));
+  encoding := TEncoding.Unicode;
+  dirSearchList := TRomEntryStack.Create;
 
-  FS.Seek($8C, 0);
-  FS.Read(romstart, 4);
-  FS.Seek(4, 1);
-  FS.Seek($A0, 0);
-  FS.Read(start, 4);
-  start := RomToOffset(start) - 4;
-  //  showmessage(inttohex(start, 8));
-  FS.Seek(start, 0);
+  if not (romExplorer.GetRomEntry('sys\bin\', entryTemp)) then
+  begin
+    if (romExplorer.GetRomEntry('system\libs\', entryTemp)) then
+    begin
+      dirSearchList.Push(entryTemp);
 
-  FS.Read(headlen, 4);
-  start := FS.Position;
-  Encoding := TEncoding.Unicode;
+      if (romExplorer.GetRomEntry('system\programs\', entryTemp)) then
+        dirSearchList.Push(entryTemp);
+    end;
+  end
+  else
+    dirSearchList.Push(entryTemp);
 
   i := 0;
-  while FS.Position - start < headlen do
+  signature := 0;
+  while dirSearchList.Count > 0 do
   begin
-    FS.Read(filesize, 4);
-    FS.Read(fileaddr, 4);
-    FS.Seek(1, 1);
-    FS.Read(len, 1);
-    SetLength(Buffer, len * 2);
-    FS.Read(Buffer[0], len * 2);
-    buf := FS.Position;
-    FS.Seek(RomToOffset(fileaddr) + $10, 0);
-    FS.Read(signature, 4);
-    FS.Position := buf;
-    if (signature <> $434F5045) and (RomToOffset(fileaddr) < FS.Size) and
-      (RomToOffset(fileaddr) + filesize + $78 < FS.Size + 2) then
+    entryTemp := dirSearchList.Pop;
+    if not romExplorer.BeginDirIterate(entryTemp) then
     begin
-      MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][0] := ' ';
-      MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][1] :=
-        LowerCase(Encoding.GetString(Buffer));
-      MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][2] :=
-        inttohex(filesize, 8);
-      MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][3] := inttohex(
-        { RomToOffset( } fileaddr, 8);
-      MainForm.StringGrid1.RowCount := MainForm.StringGrid1.RowCount + 1;
+      break;
     end;
-    if FS.Position mod 4 <> 0 then
-      FS.Seek(2, 1);
-    Inc(i);
-    if i = 200 then
+
+    while (romExplorer.GetNextEntry(entryTemp, encoding)) do
     begin
-      Application.ProcessMessages;
-      i := 0;
+      if (entryTemp.iAttrib and $10 <> 0) then
+        continue;
+
+      currentPos := FS.Position;
+      FS.Seek(romExplorer.RomToOffset(entryTemp.iDataAddr) + $10, soBeginning);
+      FS.Read(signature, 4);
+
+      if (signature <> $434F5045) and (romExplorer.RomToOffset(entryTemp.iDataAddr) < FS.Size) and
+        (romExplorer.RomToOffset(entryTemp.iDataAddr) + entryTemp.iFileSize + $78 < FS.Size + 2) then
+      begin
+        MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][0] := ' ';
+        MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][1] :=
+          AnsiString(LowerCase(entryTemp.iName));
+        MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][2] :=
+          inttohex(entryTemp.iFileSize, 8);
+        MainForm.StringGrid1.Rows[MainForm.StringGrid1.RowCount - 1][3] := inttohex(
+          entryTemp.iDataAddr, 8);
+        MainForm.StringGrid1.RowCount := MainForm.StringGrid1.RowCount + 1;
+      end;
+
+      Inc(i);
+      if i = 200 then
+      begin
+        Application.ProcessMessages;
+        i := 0;
+      end;
+
+      FS.Seek(currentPos, soBeginning);
     end;
+
+    romExplorer.EndDirIterate;
   end;
+
   FS.Seek(0, 0);
   MainForm.StringGrid1.RowCount := MainForm.StringGrid1.RowCount - 1;
   GridSort(MainForm.StringGrid1, 1, 1, MainForm.StringGrid1.RowCount - 1);
@@ -307,7 +305,7 @@ var
   Size: longint;
 begin
   SB := TFileStream.Create(path, fmOpenWrite or fmCreate);
-  FS.Seek(RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
+  FS.Seek(romExplorer.RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
   Size := $78 + StrToInt('$' + MainForm.StringGrid1.Rows[num][2]);
   if FS.Position + Size < FS.Size then
     SB.CopyFrom(FS, Size);
@@ -360,7 +358,7 @@ begin
     begin
       { The true address is stored in the address we just read from }
       lastRomPosition := FS.Position;
-      FS.Seek(RomToOffset(buf), soBeginning);
+      FS.Seek(romExplorer.RomToOffset(buf), soBeginning);
       FS.Read(buf, 4);
       FS.Seek(lastRomPosition, soBeginning);
     end;
@@ -408,7 +406,7 @@ begin
   // FPS.CopyFrom(FS, FS.Size);
   // FPS.Seek(0,0);
 
-  FS.Seek(RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])), 0);
+  FS.Seek(romExplorer.RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])), 0);
   FS.Seek($3C, 1);
   FS.Read(expnum, 4);
   FS.Read(expdir, 4);
@@ -423,7 +421,7 @@ begin
 
   if expnum > 0 then
   begin
-    FS.Seek(RomToOffset(expdir), 0);
+    FS.Seek(romExplorer.RomToOffset(expdir), 0);
     for i := 1 to expnum do
     begin
       FS.Read(buf, 4);
@@ -434,7 +432,7 @@ begin
     if expnum > 0 then
       for i := 1 to StringGrid1.RowCount - 1 do
       begin
-        FS.Seek(RomToOffset(StrToInt('$' + StringGrid1.Rows[i][3])), 0);
+        FS.Seek(romExplorer.RomToOffset(StrToInt('$' + StringGrid1.Rows[i][3])), 0);
         Size := StrToInt('$' + StringGrid1.Rows[i][2]);
         len := FS.Position + Size;
         Application.ProcessMessages;
@@ -465,7 +463,7 @@ begin
 
   // showmessage('pass 2');
 
-  FS.Seek(RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])), 0);
+  FS.Seek(romExplorer.RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])), 0);
   Size := StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][2]);
   len := FS.Position + Size + $78;
 
@@ -625,7 +623,7 @@ begin
   Application.ProcessMessages;
   for i := 1 to StringGrid1.RowCount - 1 do
   begin
-    FS.Seek(RomToOffset($3C + StrToInt('$' + StringGrid1.Rows[i][3])), 0);
+    FS.Seek(romExplorer.RomToOffset($3C + StrToInt('$' + StringGrid1.Rows[i][3])), 0);
     FS.Read(expnum, 4);
     FS.Read(expaddr, 4);
     if expnum > 0 then
@@ -710,7 +708,7 @@ begin
           sDso.Insert(exportNum - 1, exportTempName);
         end;
       end;
-      FS.Seek(RomToOffset(expaddr), 0);
+      FS.Seek(romExplorer.RomToOffset(expaddr), 0);
       for j := 1 to expnum do
       begin
         FS.Read(bufexp, 4);
@@ -768,7 +766,7 @@ begin
   IDC.Add('#define UNLOADED_FILE   1');
   IDC.Add('#include <idc.idc>');
   IDC.Add('static main(void) {');
-  FS.Seek(RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
+  FS.Seek(romExplorer.RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
   FS.Seek($10, 1);
   FS.Read(entry, 4);
   FS.Seek($64, 1);
@@ -792,10 +790,10 @@ begin
         if (importCodeType = 1) then importCodeType := 8
         else importCodeType := 12;
 
-        IDC.Add(Format('MakeCode(0x%s);', [inttohex(FS.Position - importCodeType + romstart
+        IDC.Add(Format('MakeCode(0x%s);', [inttohex(romExplorer.OffsetToRom(FS.Position - importCodeType)
           { RomToOffsetBase(entry) }, 8)]));
         IDC.Add(Format('MakeName(0x%s,"%s");',
-          [inttohex(FS.Position - importCodeType + romstart
+          [inttohex(romExplorer.OffsetToRom(FS.Position - importCodeType)
           { RomToOffsetBase(entry) }, 8), Name]));
       end;
     end;
@@ -808,10 +806,10 @@ begin
   end;
   if StrToInt('$' + MainForm.StringGrid1.Rows[num][4]) > 0 then
   begin
-    FS.Seek(RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
+    FS.Seek(romExplorer.RomToOffset(StrToInt('$' + MainForm.StringGrid1.Rows[num][3])), 0);
     FS.Seek($40, 1);
     FS.Read(buf, 4);
-    FS.Seek(RomToOffset(buf), 0);
+    FS.Seek(romExplorer.RomToOffset(buf), 0);
     for i := 1 to StrToInt('$' + MainForm.StringGrid1.Rows[num][4]) do
     begin
       FS.Read(buf, 4);
@@ -923,7 +921,7 @@ begin
   Application.ProcessMessages;
   for i := 1 to StringGrid1.RowCount - 1 do
   begin
-    FS.Seek(RomToOffset(StrToInt('$' + StringGrid1.Rows[i][3])), 0);
+    FS.Seek(romExplorer.RomToOffset(StrToInt('$' + StringGrid1.Rows[i][3])), 0);
     FS.Seek(8, 1);
     FS.Read(uid, 4);
     FS.Seek(8, 1);
@@ -1151,7 +1149,7 @@ begin
   FS.Seek($F4, 0);
   FS.Read(ad_size, 4);
   ad_maxold := ad_minold + ad_size;
-  FS.Seek(RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])),
+  FS.Seek(romExplorer.RomToOffset(StrToInt('$' + StringGrid1.Rows[StringGrid1.Row][3])),
     0);
   F.CopyFrom(FS, file_size + $78);
   F.Seek(0, 0);
@@ -1939,7 +1937,7 @@ begin
       end;
     end;
   finally
-    DragFinish(Msg.Drop); // îòïóñòèòü ôàéë
+    DragFinish(Msg.Drop);
   end;
 end;
 {$ENDIF}
