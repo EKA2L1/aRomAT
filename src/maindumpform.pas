@@ -338,13 +338,13 @@ var
 begin
   Stream.Read(buf, 4);
 
-  { LDR PC, [PC, #-4] , basically jump stub }
+  { LDR PC, [PC, #-4] or LDR, R12, [PC, #-4] , basically jump stub }
   { In some case it's thumb with LDR R3, [PC, #0], address aligned by 4 }
-  if (buf = $E51FF004) or (buf and ($FFFF) = $4B01) then
+  if (buf = $E51FF004) or (buf and ($FFFF) = $4B01) or (buf = $E59FC000) then
   begin
     ReadAnImportOutLoud := 1;
 
-    if (buf and ($FFFF) = $4B01) then
+    if (buf and ($FFFF) = $4B01) or (buf = $E59FC000) then
     begin
       // Skip 4 bytes
       FS.Seek(4, soCurrent);

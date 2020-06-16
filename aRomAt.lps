@@ -8,7 +8,7 @@
       <Unit0>
         <Filename Value="aRomAt.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="1"/>
         <CursorPos X="15" Y="8"/>
         <UsageCount Value="51"/>
         <Loaded Value="True"/>
@@ -31,9 +31,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MainDumpForm"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="228"/>
-        <CursorPos X="74" Y="239"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="343"/>
+        <CursorPos Y="354"/>
         <UsageCount Value="50"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -52,10 +53,9 @@
         <Filename Value="src\romexplorer.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="RomExplorer"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="4"/>
-        <TopLine Value="127"/>
-        <CursorPos X="2"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="107"/>
+        <CursorPos X="24" Y="113"/>
         <UsageCount Value="41"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -69,11 +69,10 @@
       <Unit6>
         <Filename Value="cryptutils.pas"/>
         <UnitName Value="CryptUtils"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="55"/>
         <CursorPos X="24" Y="17"/>
         <UsageCount Value="39"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit6>
       <Unit7>
@@ -115,7 +114,7 @@
       <Unit11>
         <Filename Value="..\..\lazarus\fpc\3.3.1\source\packages\rtl-generics\src\generics.collections.pas"/>
         <UnitName Value="Generics.Collections"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="131"/>
         <CursorPos X="52" Y="144"/>
         <UsageCount Value="16"/>
@@ -124,124 +123,124 @@
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="230" TopLine="213"/>
+        <Filename Value="src\romexplorer.pas"/>
+        <Caret Line="76" Column="41" TopLine="72"/>
       </Position1>
       <Position2>
         <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="99" TopLine="75"/>
+        <Caret Line="105" TopLine="93"/>
       </Position2>
       <Position3>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="204" Column="43" TopLine="195"/>
+        <Caret Line="207" TopLine="195"/>
       </Position3>
       <Position4>
         <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="76" Column="41" TopLine="72"/>
+        <Caret Line="99" TopLine="79"/>
       </Position4>
       <Position5>
-        <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="105" TopLine="93"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="220" TopLine="208"/>
       </Position5>
       <Position6>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="207" TopLine="195"/>
+        <Caret Line="221" TopLine="208"/>
       </Position6>
       <Position7>
-        <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="99" TopLine="79"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="225" TopLine="208"/>
       </Position7>
       <Position8>
-        <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="220" TopLine="208"/>
+        <Filename Value="src\romexplorer.pas"/>
+        <Caret Line="99" TopLine="75"/>
       </Position8>
       <Position9>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="221" TopLine="208"/>
+        <Caret Line="232" TopLine="227"/>
       </Position9>
       <Position10>
-        <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="225" TopLine="208"/>
+        <Filename Value="src\romexplorer.pas"/>
+        <Caret Line="80" TopLine="75"/>
       </Position10>
       <Position11>
         <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="99" TopLine="75"/>
+        <Caret Line="84" TopLine="75"/>
       </Position11>
       <Position12>
         <Filename Value="src\maindumpform.pas"/>
         <Caret Line="232" TopLine="227"/>
       </Position12>
       <Position13>
-        <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="80" TopLine="75"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="207" TopLine="204"/>
       </Position13>
       <Position14>
         <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="84" TopLine="75"/>
+        <Caret Line="99" TopLine="87"/>
       </Position14>
       <Position15>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="232" TopLine="227"/>
+        <Caret Line="220" TopLine="204"/>
       </Position15>
       <Position16>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="207" TopLine="204"/>
+        <Caret Line="221" TopLine="204"/>
       </Position16>
       <Position17>
-        <Filename Value="src\romexplorer.pas"/>
-        <Caret Line="99" TopLine="87"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="225" TopLine="205"/>
       </Position17>
       <Position18>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="220" TopLine="204"/>
+        <Caret Line="230" TopLine="221"/>
       </Position18>
       <Position19>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="221" TopLine="204"/>
+        <Caret Line="232" TopLine="221"/>
       </Position19>
       <Position20>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="225" TopLine="205"/>
+        <Caret Line="221" TopLine="221"/>
       </Position20>
       <Position21>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="230" TopLine="221"/>
+        <Caret Line="233" TopLine="221"/>
       </Position21>
       <Position22>
-        <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="232" TopLine="221"/>
+        <Filename Value="src\romexplorer.pas"/>
+        <Caret Column="2"/>
       </Position22>
       <Position23>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="221" TopLine="221"/>
+        <Caret Line="200" TopLine="189"/>
       </Position23>
       <Position24>
-        <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="233" TopLine="221"/>
+        <Filename Value="..\..\lazarus\fpc\3.3.1\source\packages\rtl-generics\src\generics.collections.pas"/>
+        <Caret Line="144" Column="52" TopLine="131"/>
       </Position24>
       <Position25>
-        <Filename Value="src\romexplorer.pas"/>
-        <Caret Column="2"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="238" Column="83" TopLine="226"/>
       </Position25>
       <Position26>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="200" TopLine="189"/>
+        <Caret Line="322" Column="51" TopLine="309"/>
       </Position26>
       <Position27>
-        <Filename Value="..\..\lazarus\fpc\3.3.1\source\packages\rtl-generics\src\generics.collections.pas"/>
-        <Caret Line="144" Column="52" TopLine="131"/>
+        <Filename Value="src\maindumpform.pas"/>
+        <Caret Line="411" Column="17" TopLine="399"/>
       </Position27>
       <Position28>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="238" Column="83" TopLine="226"/>
+        <Caret Line="233" Column="46" TopLine="228"/>
       </Position28>
       <Position29>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="322" Column="51" TopLine="309"/>
+        <Caret Line="352" Column="21" TopLine="338"/>
       </Position29>
       <Position30>
         <Filename Value="src\maindumpform.pas"/>
-        <Caret Line="411" Column="17" TopLine="399"/>
+        <Caret Line="354" Column="29" TopLine="343"/>
       </Position30>
     </JumpHistory>
     <RunParams>
