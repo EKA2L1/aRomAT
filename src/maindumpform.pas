@@ -336,6 +336,7 @@ var
   lastRomPosition: qword;
   isOldExport: boolean;
 begin
+  isOldExport := False;
   Stream.Read(buf, 4);
 
   { LDR PC, [PC, #-4] or LDR, R12, [PC, #-4] , basically jump stub }
