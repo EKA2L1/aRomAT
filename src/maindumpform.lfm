@@ -16,7 +16,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '2.2.0.4'
   object Label1: TLabel
     Left = 598
     Height = 1
@@ -26,7 +26,6 @@ object MainForm: TMainForm
     Font.Color = clWindowText
     Font.Height = -14
     Font.Name = 'Tahoma'
-    ParentColor = False
     ParentFont = False
   end
   object CreditLabel: TLabel
@@ -39,7 +38,6 @@ object MainForm: TMainForm
     Font.Color = clWindowText
     Font.Height = -14
     Font.Name = 'Tahoma'
-    ParentColor = False
     ParentFont = False
   end
   object SearchBoxLabel: TLabel
@@ -51,7 +49,6 @@ object MainForm: TMainForm
     Font.Color = clWindowText
     Font.Height = -14
     Font.Name = 'Tahoma'
-    ParentColor = False
     ParentFont = False
   end
   object ShowLogInfoLabel: TLabel
@@ -64,7 +61,6 @@ object MainForm: TMainForm
     Font.Color = clGreen
     Font.Height = -14
     Font.Name = 'Tahoma'
-    ParentColor = False
     ParentFont = False
     Visible = False
   end
@@ -78,7 +74,6 @@ object MainForm: TMainForm
     Font.Height = -34
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
-    ParentColor = False
     ParentFont = False
   end
   object LoadDumpBtn: TBitBtn

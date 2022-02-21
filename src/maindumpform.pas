@@ -1244,6 +1244,11 @@ begin
   data_reloc_savepos := datarelocsec.Position;
   datarelocsec.Write(Knull, 4);
 
+  last_code_relocs := -1;
+  code_relocs := 0;
+  last_data_relocs := -1;
+  data_relocs := 0;
+
   while fp < (xCodeSize + xDataSize + $78) do
   begin
     F.Seek(fp, 0);
